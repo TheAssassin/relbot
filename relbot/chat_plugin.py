@@ -1,4 +1,5 @@
 import itertools
+import random
 
 from irc3.plugins.command import command
 import irc3
@@ -37,7 +38,13 @@ class RELBotPlugin:
         for server in sorted(non_empty_legacy_servers, key=lambda s: s.players_count, reverse=True):
             players = [p.name for p in server.players]
 
-            colors = itertools.cycle(["red", "pink", "green", "teal", "orange", None])
+            # the colors we use to format player names
+            colors = ["red", "pink", "green", "teal", "orange", None]
+            # make things a bit more interesting by randomizing the order
+            random.shuffle(colors)
+            # however, once the order is defined, just apply those colors in the ever same order to nicks in the list
+            # it'd be nice to assign some sort of "persistent" colors derived from the nicks
+            colors = itertools.cycle(colors)
 
             # this is the "freem exception"
             # freem doesnt like to be pinged on IRC whenever !matches is called while they are playing
