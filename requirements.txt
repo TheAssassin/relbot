@@ -1,0 +1,4 @@
+requests
+irc3
+feedparser
+ircmessage

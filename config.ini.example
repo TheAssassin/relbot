@@ -1,0 +1,32 @@
+[bot]
+nick = relbot
+username = relbot
+
+host = localhost
+port = 6667
+
+includes =
+    irc3.plugins.command
+    irc3.plugins.feeds
+    irc3.plugins.logger
+    irc3.plugins.uptime
+    relbot.chat_plugin
+
+autojoins =
+    ${#}re-legacy
+
+[irc3.plugins.command]
+cmd = !
+guard = irc3.plugins.command.mask_based_policy
+
+[irc3.plugins.logger]
+handler = relbot.log.StdoutHandler
+
+[irc3.plugins.command.masks]
+* = view
+
+[relbot]
+# redflare_url = https://my.redflare.instance
+
+[irc3.plugins.feeds]
+
