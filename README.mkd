@@ -1,0 +1,3 @@
+# relbot
+
+Just yet another IRC bot.
