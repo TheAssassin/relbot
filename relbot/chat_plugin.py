@@ -95,9 +95,9 @@ class RELBotPlugin:
 
         if ratio == 0:
             message += " -- no matches running o_O"
-        elif ratio > 3:
-            message += " -- WOOHOO!!!111!1!!11"
         elif ratio > 2:
+            message += " -- WOOHOO!!!111!1!!11"
+        elif ratio > 1:
             message += " -- awesome!"
         elif ratio == 1:
             message += "... meh..."
