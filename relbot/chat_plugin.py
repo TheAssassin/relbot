@@ -89,11 +89,16 @@ class RELBotPlugin:
         message = "%d legacy vs. %d non-legacy players" % (legacy_players_count, non_legacy_players_count)
 
         if non_legacy_players_count == 0:
-            ratio = 0
+            if legacy_players_count == 0:
+                ratio = None
+            else:
+                # with no matches running, legacy wins
+                # over 9000!
+                ratio = 9001
         else:
             ratio = float(legacy_players_count) / float(non_legacy_players_count)
 
-        if ratio == 0:
+        if ratio is None:
             message += " -- no matches running o_O"
         elif ratio > 2:
             message += " -- WOOHOO!!!111!1!!11"
