@@ -1,9 +1,12 @@
 import itertools
 import random
 
+import requests
 from irc3.plugins.command import command
 import irc3
 import ircmessage
+from lxml import html
+import re
 
 from .redflare_client import RedflareClient
 
@@ -121,6 +124,50 @@ class RELBotPlugin:
         self.bot.reload("relbot.chat_plugin")
 
         yield "Done!"
+
+    @irc3.event(irc3.rfc.PRIVMSG)
+    def github_integration(self, mask, target, data, **kwargs):
+        """Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
+        if possible.
+        Uses web scraping instead of any annoying
+        Note: cannot use yield to send replies; it'll fail silently then
+        """
+
+        # skip all commands
+        if any((data.strip(" \r\n").startswith(i) for i in [self.bot.config["cmd"], self.bot.config["re_cmd"]])):
+            return
+
+        # some things can't be done easily by a regex
+        # we have to intentionally terminate the data with a space
+        # that way, we can check that the #123 like patters stand alone using a regex that makes sure there's at least
+        # a whitespace character after the interesting bit, ensuring that strings like #123abc are not matched
+        # this should prevent some false and unnecessary checks
+        data += " "
+
+        matches = re.findall(r"#([0-9]+)\s+", data)
+
+        print(matches)
+
+        for match in matches:
+            # we just check the issues URL; GitHub should automatically redirect to pull requests
+            url = "https://github.com/blue-nebula/base/issues/{}".format(match)
+
+            proxies = {
+                "http": "socks5://127.0.0.1:9050",
+                "https": "socks5://127.0.0.1:9050",
+            }
+
+            response = requests.get(url, allow_redirects=True, proxies=proxies)
+
+            if response.status_code != 200:
+                print("argh", response)
+
+            tree = html.fromstring(response.content)
+            title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
+
+            notice = "[GitHub] {} ({})".format(title, response.url)
+
+            self.bot.notice(target, notice)
 
     @classmethod
     def reload(cls, old):
