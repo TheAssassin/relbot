@@ -126,6 +126,14 @@ class RELBotPlugin:
 
         yield "Done!"
 
+    @command(name="rp", permission="view")
+    def rp(self, *args, **kwargs):
+        """Reloads this plugin
+
+            %%rp
+        """
+        return self.reload_plugin(*args, **kwargs)
+
     @command(name="lmgtfy", permission="view")
     def lmgtfy(self, mask, target, args):
         """Let me google that for you!
