@@ -147,6 +147,24 @@ class RELBotPlugin:
 
         yield "https://lmgtfy.com/?{}".format(querystring)
 
+    @command(name="chuck", permission="view")
+    def chuck(self, mask, target, args):
+        """Tell a Chuck Norris joke from the Internet Chuck Norris Database (icndb.com)
+
+            %%chuck
+        """
+
+        proxies = {
+            "http": "socks5://127.0.0.1:9050",
+            "https": "socks5://127.0.0.1:9050",
+        }
+
+        url = "http://api.icndb.com/jokes/random"
+
+        response = requests.get(url, allow_redirects=True, proxies=proxies)
+
+        yield response.json()["value"]["joke"]
+
     @irc3.event(irc3.rfc.PRIVMSG)
     def github_integration(self, mask, target, data, **kwargs):
         """Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
