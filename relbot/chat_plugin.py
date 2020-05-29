@@ -111,11 +111,11 @@ class RELBotPlugin:
 
         yield message
 
-    @command(permission="view")
+    @command(name="reload-plugin", permission="view")
     def reload_plugin(self, mask, target, args):
         """Reloads this plugin
 
-            %%reload_plugin
+            %%reload-plugin
         """
 
         self.bot.reload("relbot.chat_plugin")
