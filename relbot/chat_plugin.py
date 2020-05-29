@@ -1,5 +1,6 @@
 import itertools
 import random
+from urllib.parse import urlencode
 
 import requests
 from irc3.plugins.command import command
@@ -124,6 +125,19 @@ class RELBotPlugin:
         self.bot.reload("relbot.chat_plugin")
 
         yield "Done!"
+
+    @command(name="lmgtfy", permission="view")
+    def lmgtfy(self, mask, target, args):
+        """Let me google that for you!
+
+            %%lmgtfy <args>...
+        """
+
+        querystring = urlencode({
+            "q": " ".join(args["<args>"]),
+        })
+
+        yield "https://lmgtfy.com/?{}".format(querystring)
 
     @irc3.event(irc3.rfc.PRIVMSG)
     def github_integration(self, mask, target, data, **kwargs):
