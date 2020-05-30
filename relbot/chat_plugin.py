@@ -200,7 +200,12 @@ class RELBotPlugin:
             response = requests.get(url, allow_redirects=True, proxies=proxies)
 
             if response.status_code != 200:
-                self.bot.notice(target, "[GitHub] Request to GitHub failed")
+                if response.status_code == 404:
+                    self.bot.notice(target, "[GitHub] Could not find anything for #{}".format(match))
+
+                else:
+                    self.bot.notice(target, "[GitHub] Request to GitHub failed")
+
                 return
 
             tree = html.fromstring(response.content)
