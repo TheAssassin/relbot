@@ -200,12 +200,21 @@ class RELBotPlugin:
             response = requests.get(url, allow_redirects=True, proxies=proxies)
 
             if response.status_code != 200:
-                print("argh", response)
+                self.bot.notice(target, "[GitHub] Request to GitHub failed")
+                return
 
             tree = html.fromstring(response.content)
             title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
 
-            notice = "[GitHub] {} ({})".format(title, response.url)
+            url_parts = response.url.split("/")
+            if "pull" in url_parts:
+                type = "PR"
+            elif "issues" in url_parts:
+                type = "Issue"
+            else:
+                type = "Unknown Entity"
+
+            notice = "[GitHub] {} #{}: {} ({})".format(type, match, title, response.url)
 
             self.bot.notice(target, notice)
 
