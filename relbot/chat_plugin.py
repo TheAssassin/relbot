@@ -147,6 +147,19 @@ class RELBotPlugin:
 
         yield "https://lmgtfy.com/?{}".format(querystring)
 
+    @command(name="ud", permission="view")
+    def urbandictionary(self, mask, target, args):
+        """Search a term on urbandictionary.com
+
+            %%ud <args>...
+        """
+
+        querystring = urlencode({
+            "term": " ".join(args["<args>"]),
+        })
+
+        yield "https://www.urbandictionary.com/define.php?{}".format(querystring)
+
     @command(name="chuck", permission="view")
     def chuck(self, mask, target, args):
         """Tell a Chuck Norris joke from the Internet Chuck Norris Database (icndb.com)
