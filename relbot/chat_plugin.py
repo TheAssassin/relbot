@@ -199,8 +199,6 @@ class RELBotPlugin:
 
         matches = re.findall(r"#([0-9]+)\s+", data)
 
-        print(matches)
-
         for match in matches:
             # we just check the issues URL; GitHub should automatically redirect to pull requests
             url = "https://github.com/blue-nebula/base/issues/{}".format(match)
