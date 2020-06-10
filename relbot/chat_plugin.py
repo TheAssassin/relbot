@@ -17,7 +17,10 @@ from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
 class RELBotPlugin:
     def __init__(self, bot):
         self.bot = bot
-        self.redflare_url = self.bot.config.get("relbot", dict()).get("redflare_url", None)
+        self.redflare_url = self._relbot_config().get("redflare_url", None)
+
+    def _relbot_config(self):
+        return self.bot.config.get("relbot", dict())
 
     @command(permission="view")
     def matches(self, mask, target, args):
