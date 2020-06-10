@@ -9,6 +9,7 @@ import ircmessage
 from lxml import html
 import re
 
+from .jokes import JokesManager
 from .redflare_client import RedflareClient
 from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
 
@@ -18,6 +19,11 @@ class RELBotPlugin:
     def __init__(self, bot):
         self.bot = bot
         self.redflare_url = self._relbot_config().get("redflare_url", None)
+
+        try:
+            self.jokes_manager = JokesManager(self._relbot_config()["jokes_file"])
+        except KeyError:
+            self.jokes_manager = None
 
     def _relbot_config(self):
         return self.bot.config.get("relbot", dict())
@@ -189,6 +195,40 @@ class RELBotPlugin:
         response = requests.get(url, allow_redirects=True, proxies=proxies)
 
         yield response.json()["value"]["joke"]
+
+    @command(name="joke", permission="view")
+    def joke(self, mask, target, args):
+        """
+        Tell a Blue Nebula (code) joke.
+
+            %%joke
+        """
+
+        if self.jokes_manager is None:
+            yield "Jokes file not configured"
+
+        else:
+            joke = self.jokes_manager.get_random()
+
+            if joke is None:
+                yield "No jokes found"
+            else:
+                yield joke
+
+    @command(name="register-joke", permission="jokes-admin")
+    def register_joke(self, mask, target, args):
+        """
+        Register code joke.
+
+            %%register-joke <args>...
+        """
+
+        if self.jokes_manager is None:
+            yield "Jokes file not configured"
+
+        else:
+            self.jokes_manager.register_joke(" ".join(args["<args>"]))
+            yield "Done!"
 
     @irc3.event(irc3.rfc.PRIVMSG)
     def github_integration(self, mask, target, data, **kwargs):
