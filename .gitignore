@@ -143,3 +143,7 @@ cython_debug/
 
 # irc3 bot configs
 *.ini
+
+# jokes and other storage files
+*.txt
+!LICENSE.txt
