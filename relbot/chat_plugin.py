@@ -10,6 +10,7 @@ from lxml import html
 import re
 
 from .redflare_client import RedflareClient
+from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
 
 
 @irc3.plugin
@@ -154,11 +155,19 @@ class RELBotPlugin:
             %%ud <args>...
         """
 
-        querystring = urlencode({
-            "term": " ".join(args["<args>"]),
-        })
+        term = " ".join(args["<args>"])
 
-        yield "https://www.urbandictionary.com/define.php?{}".format(querystring)
+        try:
+            definition = UrbanDictionaryClient.top_definition(term)
+        except UrbanDictionaryError as e:
+            yield "error while fetching data from urbandictionary.com: %s" % str(e)
+        except:
+            yield "unknown error occured"
+        else:
+            yield "%s: %s (example: %s)" % (definition.word, definition.meaning, definition.example)
+
+            notice = "see %s for more definitions" % UrbanDictionaryClient.build_url(term)
+            self.bot.notice(target, notice)
 
     @command(name="chuck", permission="view")
     def chuck(self, mask, target, args):
