@@ -213,7 +213,7 @@ class RELBotPlugin:
 
         url = "http://api.icndb.com/jokes/random"
 
-        response = requests.get(url, allow_redirects=True, proxies=proxies)
+        response = self._make_requests_session().get(url, allow_redirects=True)
 
         yield response.json()["value"]["joke"]
 
@@ -276,12 +276,7 @@ class RELBotPlugin:
             # we just check the issues URL; GitHub should automatically redirect to pull requests
             url = "https://github.com/blue-nebula/base/issues/{}".format(match)
 
-            proxies = {
-                "http": "socks5://127.0.0.1:9050",
-                "https": "socks5://127.0.0.1:9050",
-            }
-
-            response = requests.get(url, allow_redirects=True, proxies=proxies)
+            response = self._make_requests_session().get(url, allow_redirects=True)
 
             if response.status_code != 200:
                 if response.status_code == 404:
