@@ -13,6 +13,7 @@ from .jokes import JokesManager
 from .redflare_client import RedflareClient
 from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
 from .util import managed_proxied_session
+from .wikipedia_client import WikipediaAPIError, WikipediaAPIClient
 
 
 @irc3.plugin
@@ -191,6 +192,47 @@ class RELBotPlugin:
 
             notice = "see %s for more definitions" % UrbanDictionaryClient.build_url(term)
             self.bot.notice(target, notice)
+
+
+    @command(name="wiki", permission="view")
+    def wikipedia_search(self, mask, target, args):
+        """Search a term on en.wikipedia.org
+
+            %%wiki <args>...
+        """
+
+        args_args = args["<args>"]
+
+        # by default, fetch only one result
+        num_results = 1
+
+        # it can be overwritten with a user-specified value, though
+        if len(args_args) > 1:
+            try:
+                num_results = int(args_args[-1])
+
+            except ValueError:
+                pass
+
+            else:
+                # in case the conversion worked, we remove the last item from the list
+                args_args.pop()
+
+        term = " ".join(args_args)
+
+        try:
+            search_results = list(WikipediaAPIClient.search_for_term(term))
+
+        except WikipediaAPIError as e:
+            yield "Wikipedia API error: %s" % str(e)
+
+        except:
+            yield "unknown error occured"
+
+        else:
+            for page in search_results[:num_results]:
+                url = WikipediaAPIClient.get_page_url(page.title)
+                yield "%s: %s (%s)" % (page.title, page.snippet, url)
 
     @command(name="chuck", permission="view")
     def chuck(self, mask, target, args):
