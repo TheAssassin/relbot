@@ -4,3 +4,4 @@ feedparser
 ircmessage
 lxml
 cssselect
+beautifulsoup4
