@@ -32,6 +32,9 @@ class UrbanDictionaryClient:
         with managed_proxied_session() as session:
             response = session.get(url, allow_redirects=True)
 
+        if response.status_code == 404:
+            raise UrbanDictionaryError("no results for search term \"%s\"" % term)
+
         if response.status_code != 200:
             raise UrbanDictionaryError("HTTP status %d" % response.status_code)
 
