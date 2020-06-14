@@ -5,6 +5,8 @@ from urllib.parse import urlencode
 import requests
 from lxml import html
 
+from relbot.util import managed_proxied_session
+
 
 class UrbanDictionaryError(Exception):
     pass
@@ -28,12 +30,8 @@ class UrbanDictionaryClient:
     def define_all(cls, term: str) -> Iterator[UrbanDictionaryDefinition]:
         url = cls.build_url(term)
 
-        proxies = {
-            "http": "socks5://127.0.0.1:9050",
-            "https": "socks5://127.0.0.1:9050",
-        }
-
-        response = requests.get(url, allow_redirects=True, proxies=proxies)
+        with managed_proxied_session() as session:
+            response = session.get(url, allow_redirects=True)
 
         if response.status_code != 200:
             raise UrbanDictionaryError("HTTP status %d" % response.status_code)
