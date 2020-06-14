@@ -1,8 +1,7 @@
 from collections import namedtuple
-from typing import List, Iterator
+from typing import Iterator
 from urllib.parse import urlencode
 
-import requests
 from lxml import html
 
 from relbot.util import managed_proxied_session
