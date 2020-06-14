@@ -12,6 +12,7 @@ import re
 from .jokes import JokesManager
 from .redflare_client import RedflareClient
 from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
+from .util import make_requests_session
 
 
 @irc3.plugin
@@ -28,20 +29,6 @@ class RELBotPlugin:
     def _relbot_config(self):
         return self.bot.config.get("relbot", dict())
 
-    def _make_requests_session(self):
-        # local Tor proxy server
-        proxies = {
-            "http": "socks5://127.0.0.1:9050",
-            "https": "socks5://127.0.0.1:9050",
-        }
-
-        session = requests.session()
-
-        # this way, we only overwrite entries we want to change, and leave existing ones alone
-        session.proxies.update(proxies)
-
-        return session
-
     @command(name="test-proxy", permssion="admin")
     def test_proxy(self, mask, target, args):
         """bla
@@ -49,7 +36,7 @@ class RELBotPlugin:
             %%test-proxy
         """
 
-        response = self._make_requests_session().get("https://check.torproject.org/")
+        response = make_requests_session().get("https://check.torproject.org/")
 
         doc = html.fromstring(response.text)
         yield doc.cssselect("h1.not")[0].text.strip()
@@ -276,7 +263,7 @@ class RELBotPlugin:
             # we just check the issues URL; GitHub should automatically redirect to pull requests
             url = "https://github.com/blue-nebula/base/issues/{}".format(match)
 
-            response = self._make_requests_session().get(url, allow_redirects=True)
+            response = make_requests_session().get(url, allow_redirects=True)
 
             if response.status_code != 200:
                 if response.status_code == 404:
