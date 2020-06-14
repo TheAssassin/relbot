@@ -28,6 +28,32 @@ class RELBotPlugin:
     def _relbot_config(self):
         return self.bot.config.get("relbot", dict())
 
+    def _make_requests_session(self):
+        # local Tor proxy server
+        proxies = {
+            "http": "socks5://127.0.0.1:9050",
+            "https": "socks5://127.0.0.1:9050",
+        }
+
+        session = requests.session()
+
+        # this way, we only overwrite entries we want to change, and leave existing ones alone
+        session.proxies.update(proxies)
+
+        return session
+
+    @command(name="test-proxy", permssion="admin")
+    def test_proxy(self, mask, target, args):
+        """bla
+
+            %%test-proxy
+        """
+
+        response = self._make_requests_session().get("https://check.torproject.org/")
+
+        doc = html.fromstring(response.text)
+        yield doc.cssselect("h1.not")[0].text.strip()
+
     @command(permission="view")
     def matches(self, mask, target, args):
         """List interesting Red Eclipse matches
@@ -185,11 +211,6 @@ class RELBotPlugin:
             %%chuck
         """
 
-        proxies = {
-            "http": "socks5://127.0.0.1:9050",
-            "https": "socks5://127.0.0.1:9050",
-        }
-
         url = "http://api.icndb.com/jokes/random"
 
         response = requests.get(url, allow_redirects=True, proxies=proxies)
@@ -285,6 +306,15 @@ class RELBotPlugin:
             notice = "[GitHub] {} #{}: {} ({})".format(type, match, title, response.url)
 
             self.bot.notice(target, notice)
+
+    @command(name="bug", permission="view")
+    def bug(self, mask, target, args):
+        """Show link to issue tracker.
+
+            %%bug
+        """
+
+        yield "https://github.com/TheAssassin/relbot/issues/new"
 
     @classmethod
     def reload(cls, old):
