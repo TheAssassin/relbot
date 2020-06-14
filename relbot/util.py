@@ -1,7 +1,10 @@
+import contextlib
+
 import requests
 
 
-def make_requests_session():
+@contextlib.contextmanager
+def managed_proxied_session():
     """
     Set up requests session with proxies preconfigured. HTTP(S) requests done via this session object should be proxied
     automatically.
@@ -19,4 +22,8 @@ def make_requests_session():
     # this way, we only overwrite entries we want to change, and leave existing ones alone
     session.proxies.update(proxies)
 
-    return session
+    try:
+        yield session
+
+    finally:
+        session.close()

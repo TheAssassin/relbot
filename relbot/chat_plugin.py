@@ -12,7 +12,7 @@ import re
 from .jokes import JokesManager
 from .redflare_client import RedflareClient
 from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
-from .util import make_requests_session
+from .util import managed_proxied_session
 
 
 @irc3.plugin
@@ -36,7 +36,8 @@ class RELBotPlugin:
             %%test-proxy
         """
 
-        response = make_requests_session().get("https://check.torproject.org/")
+        with managed_proxied_session() as session:
+            response = session.get("https://check.torproject.org/")
 
         doc = html.fromstring(response.text)
         yield doc.cssselect("h1.not")[0].text.strip()
@@ -200,7 +201,8 @@ class RELBotPlugin:
 
         url = "http://api.icndb.com/jokes/random"
 
-        response = self._make_requests_session().get(url, allow_redirects=True)
+        with managed_proxied_session() as session:
+            response = session.get(url, allow_redirects=True)
 
         yield response.json()["value"]["joke"]
 
@@ -263,7 +265,8 @@ class RELBotPlugin:
             # we just check the issues URL; GitHub should automatically redirect to pull requests
             url = "https://github.com/blue-nebula/base/issues/{}".format(match)
 
-            response = make_requests_session().get(url, allow_redirects=True)
+            with managed_proxied_session() as session:
+                response = session.get(url, allow_redirects=True)
 
             if response.status_code != 200:
                 if response.status_code == 404:
