@@ -294,14 +294,10 @@ class RELBotPlugin:
         if any((data.strip(" \r\n").startswith(i) for i in [self.bot.config["cmd"], self.bot.config["re_cmd"]])):
             return
 
-        # some things can't be done easily by a regex
-        # we have to intentionally terminate the data with a space
-        # that way, we can check that the #123 like patters stand alone using a regex that makes sure there's at least
-        # a whitespace character after the interesting bit, ensuring that strings like #123abc are not matched
-        # this should prevent some false and unnecessary checks
-        data += " "
-
-        matches = re.findall(r"#([0-9]+)\s+", data)
+        # this regex will just match any string, even if embedded in some other string
+        # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
+        # integration
+        matches = re.findall(r"#([0-9]+)", data)
 
         for match in matches:
             # we just check the issues URL; GitHub should automatically redirect to pull requests
