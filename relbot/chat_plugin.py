@@ -140,7 +140,7 @@ class RELBotPlugin:
 
         yield message
 
-    @command(name="reload-plugin", permission="view")
+    @command(name="reload-plugin", permission="admin")
     def reload_plugin(self, mask, target, args):
         """Reloads this plugin
 
@@ -151,7 +151,7 @@ class RELBotPlugin:
 
         yield "Done!"
 
-    @command(name="rp", permission="view")
+    @command(name="rp", permission="admin")
     def rp(self, *args, **kwargs):
         """Reloads this plugin
 
