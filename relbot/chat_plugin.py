@@ -282,6 +282,22 @@ class RELBotPlugin:
             self.jokes_manager.register_joke(" ".join(args["<args>"]))
             yield "Done!"
 
+    @command(name="cookie", permission="view")
+    def cookie(self, mask, target, args):
+        """
+        Give someone a cookie from the jar.
+
+            %%cookie <nick>
+        """
+
+        upper_limit = 10
+
+        if random.randint(0, upper_limit) == (upper_limit // 2):
+            yield "The jar is empty! Bummer! Gonna go buy some more!"
+
+        else:
+            yield "%s gets a cookie from the jar." % args["<nick>"]
+
     @irc3.event(irc3.rfc.PRIVMSG)
     def github_integration(self, mask, target, data, **kwargs):
         """Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
