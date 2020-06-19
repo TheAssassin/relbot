@@ -329,10 +329,11 @@ class RELBotPlugin:
 
             if response.status_code != 200:
                 if response.status_code == 404:
-                    self.bot.notice(target, "[GitHub] Could not find anything for #{}".format(issue_id))
-
+                    message = "Could not find anything for #{}".format(issue_id)
                 else:
-                    self.bot.notice(target, "[GitHub] Request to GitHub failed")
+                    message = "Request to GitHub failed"
+
+                yield self._format_github_event(message)
 
                 return
 
@@ -347,9 +348,14 @@ class RELBotPlugin:
             else:
                 type = "Unknown Entity"
 
-            notice = "[GitHub] {} #{}: {} ({})".format(type, issue_id, title, response.url)
+            notice = self._format_github_event("{} #{}: {} ({})".format(type, issue_id, title, response.url))
 
             self.bot.notice(target, notice)
+
+    @staticmethod
+    def _format_github_event(event):
+        s = "[GitHub] {}".format(event)
+        return s
 
     @cron("*/2 * * * *")
     def check_github_events(self):
@@ -370,7 +376,7 @@ class RELBotPlugin:
 
         else:
             for event in events:
-                notice = "[GitHub] {}".format(event)
+                notice = self._format_github_event(event)
 
                 for target in channels:
                     self.bot.notice(target, notice)
