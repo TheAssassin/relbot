@@ -222,6 +222,9 @@ class GithubEventsAPIClient:
         self.last_modified = response.headers["last-modified"]
 
         data = response.json()
+
+        self.last_reported_id = int(data[0]["id"])
+
         return data
 
     def setup(self):
