@@ -258,8 +258,6 @@ class GithubEventsAPIClient:
         # sanity check
         assert events[0].id > events[1].id
 
-        self.last_reported_id = int(events[0].id)
-
         return events
 
     def setup(self):
@@ -286,6 +284,8 @@ class GithubEventsAPIClient:
 
             yield event
 
+        self.last_reported_id = int(events[0].id)
+
 
 if __name__ == "__main__":
     client = GithubEventsAPIClient("blue-nebula")
@@ -293,9 +293,15 @@ if __name__ == "__main__":
     # for debugging we print all events we can possibly get
     client.last_reported_id = 1
 
-    lines = [str(i) for i in client.fetch_events()]
+    events = client.fetch_events()
 
-    print("\n".join(lines))
+    print("\n".join([str(e) for e in events]))
+
+    # try to fetch last event again by convincing the bot it has reported each event but the last one
+    client.last_reported_id = events[1].id
+
+    new_events = list(client.fetch_new_events())
+    assert len(new_events) == 1
 
     # check whether the if-modified-since thing works
     assert not list(client.fetch_new_events())
