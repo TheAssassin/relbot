@@ -2,7 +2,7 @@ import string
 from collections import namedtuple
 from typing import Iterator, List
 
-from relbot.util import managed_proxied_session
+from relbot.util import managed_proxied_session, make_logger
 
 
 class UnsupportedEventError(Exception):
@@ -192,6 +192,8 @@ class PullRequestEventPayload(namedtuple("PullRequestEventPayload", ["action", "
 
 class GithubEventsAPIClient:
     def __init__(self, organization: str):
+        self.logger = make_logger("GitHubEventsAPIClient")
+
         # sanity check to make handling the organization name a little easier
         for c in organization:
             assert c in (string.ascii_letters + string.digits + "-_")
@@ -226,6 +228,7 @@ class GithubEventsAPIClient:
         response.raise_for_status()
 
         if response.status_code == 304:
+            self.logger.info("using cached response")
             response = self.cached_response
 
         elif response.status_code == 200:
