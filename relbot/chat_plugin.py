@@ -110,13 +110,19 @@ class RELBotPlugin:
             # ofc this only works until freem decides to use another nickname
             players = ["_freem_" if p == "freem" else p for p in players]
 
-            message = "%s on %s (%s): %s %s on %s" % (
+            if server.time_left < 0:
+                time_remaining_str = "∞"
+            else:
+                time_remaining_str = "%d:%d left" % (server.time_left // 60, server.time_left % 60)
+
+            message = "%s on %s (%s): %s %s on %s (%s)" % (
                 ircmessage.style(str(server.players_count), fg="red"),
                 ircmessage.style("%s" % server.description, fg="orange"),
                 ", ".join((ircmessage.style(p, fg=next(colors)) for p in players)),
                 ircmessage.style("-".join(server.mutators), fg="teal"),
                 ircmessage.style(server.game_mode, fg="green"),
                 ircmessage.style(server.map_name, fg="pink"),
+                time_remaining_str,
             )
 
             self.logger.debug(repr(message))
