@@ -13,7 +13,8 @@ includes =
     relbot.chat_plugin
 
 autojoins =
-    ${#}re-legacy
+    ${#}mychannel
+    ${#}myotherchannel
 
 [irc3.plugins.command]
 cmd = !
@@ -28,7 +29,9 @@ handler = relbot.log.StdoutHandler
 [relbot]
 # redflare_url = https://my.redflare.instance
 # jokes_file = jokes.txt
-# github_events_channels = #mychan #myotherchan
+# github_events_channels =
+#     ${#}mychannel
+#     ${#}myotherchannel
 
 [irc3.plugins.feeds]
 
