@@ -106,7 +106,13 @@ class IssuesEventPayload(namedtuple("IssuesEventPayload", ["action", "number", "
 
         issue = data["issue"]
 
-        return cls(action, format_id(issue["number"]), issue["html_url"], issue["title"], issue["user"]["login"])
+        return cls(
+            action,
+            format_id(issue["number"]),
+            issue["html_url"],
+            issue["title"],
+            format_user_name(issue["user"]["login"]),
+        )
 
     def __str__(self):
         data = self._asdict()
@@ -133,7 +139,7 @@ class IssueCommentEventPayload(namedtuple("IssueCommentEventPayload", ["number",
             format_id(issue["number"]),
             issue["html_url"],
             issue["title"],
-            issue["user"]["login"],
+            format_user_name(issue["user"]["login"]),
         )
 
     def __str__(self):
