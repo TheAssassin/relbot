@@ -4,11 +4,13 @@ from urllib.parse import urlencode
 
 import requests
 from irc3.plugins.command import command
+from irc3.plugins.cron import cron
 import irc3
 import ircmessage
 from lxml import html
 import re
 
+from .github_events_api_client import GithubEventsAPIClient
 from .jokes import JokesManager
 from .redflare_client import RedflareClient
 from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
@@ -26,6 +28,9 @@ class RELBotPlugin:
             self.jokes_manager = JokesManager(self._relbot_config()["jokes_file"])
         except KeyError:
             self.jokes_manager = None
+
+        self.github_events_api_client = GithubEventsAPIClient("blue-nebula")
+        self.github_events_api_client.setup()
 
     def _relbot_config(self):
         return self.bot.config.get("relbot", dict())
@@ -345,6 +350,30 @@ class RELBotPlugin:
             notice = "[GitHub] {} #{}: {} ({})".format(type, issue_id, title, response.url)
 
             self.bot.notice(target, notice)
+
+    @cron("*/1 * * * *")
+    def check_github_events(self):
+        channels = self._relbot_config().get("github_events_channels", None)
+
+        if not channels:
+            return
+
+        channels = channels.split(" ")
+
+        try:
+            events = self.github_events_api_client.fetch_new_events()
+
+        except requests.HTTPError as e:
+            # might have run into a rate limit
+            # just ignore it for now
+            print("HTTP error while fetching events from GitHub:", e)
+
+        else:
+            for event in events:
+                notice = "[GitHub] {}".format(event)
+
+                for target in channels:
+                    self.bot.notice(target, notice)
 
     @command(name="bug", permission="view")
     def bug(self, mask, target, args):
