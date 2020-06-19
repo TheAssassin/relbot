@@ -351,7 +351,7 @@ class RELBotPlugin:
 
             self.bot.notice(target, notice)
 
-    @cron("*/1 * * * *")
+    @cron("*/2 * * * *")
     def check_github_events(self):
         channels = self._relbot_config().get("github_events_channels", None)
 
