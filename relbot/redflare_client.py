@@ -32,7 +32,6 @@ class Server:
         self.protocol: Union[str, None] = None
         self.game_mode: Union[str, None] = None
         self.mutators: Union[List[str], None] = None
-        self.time_remaining: Union[int, None] = None
         self.max_slots: Union[int, None] = None
         self.mastermode: Union[str, None] = None
         self.modification_percentage: Union[int, None] = None
