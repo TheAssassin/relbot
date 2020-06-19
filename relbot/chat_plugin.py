@@ -47,7 +47,17 @@ class RELBotPlugin:
         return self.bot.config.get("relbot", dict())
 
     def _get_github_events_channels(self):
-        return self._relbot_config().get("github_events_channels", [])
+        config_key = "github_events_channels"
+
+        config_value = self._relbot_config().get(config_key)
+
+        # not too Pythonic, but both str and list are iterable...
+        if isinstance(config_value, str):
+            return config_value.split()
+        elif isinstance(config_value, list):
+            return config_value
+        else:
+            raise ValueError("Unsupported value for %s: %r", config_key, config_value)
 
     @command(name="test-proxy", permssion="admin", show_in_help_list=False)
     def test_proxy(self, mask, target, args):
@@ -378,8 +388,6 @@ class RELBotPlugin:
         if not channels:
             self.logger.debug("cron job check_github_events skipped: no channels configured")
             return
-
-        channels = channels.split(" ")
 
         self.logger.info("cron job running: check_github_events %r", channels)
 
