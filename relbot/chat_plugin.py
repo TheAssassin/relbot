@@ -313,18 +313,18 @@ class RELBotPlugin:
         # this regex will just match any string, even if embedded in some other string
         # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
         # integration
-        matches = re.findall(r"#([0-9]+)", data)
+        issue_ids = re.findall(r"#([0-9]+)", data)
 
-        for match in matches:
+        for issue_id in issue_ids:
             # we just check the issues URL; GitHub should automatically redirect to pull requests
-            url = "https://github.com/blue-nebula/base/issues/{}".format(match)
+            url = "https://github.com/blue-nebula/base/issues/{}".format(issue_id)
 
             with managed_proxied_session() as session:
                 response = session.get(url, allow_redirects=True)
 
             if response.status_code != 200:
                 if response.status_code == 404:
-                    self.bot.notice(target, "[GitHub] Could not find anything for #{}".format(match))
+                    self.bot.notice(target, "[GitHub] Could not find anything for #{}".format(issue_id))
 
                 else:
                     self.bot.notice(target, "[GitHub] Request to GitHub failed")
@@ -342,7 +342,7 @@ class RELBotPlugin:
             else:
                 type = "Unknown Entity"
 
-            notice = "[GitHub] {} #{}: {} ({})".format(type, match, title, response.url)
+            notice = "[GitHub] {} #{}: {} ({})".format(type, issue_id, title, response.url)
 
             self.bot.notice(target, notice)
 
