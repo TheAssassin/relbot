@@ -381,6 +381,32 @@ class RELBotPlugin:
                 for target in channels:
                     self.bot.notice(target, notice)
 
+    @command(name="test-gh-events", permssion="admin", show_in_help_list=False)
+    def test_proxy(self, mask, target, args):
+        """Fetch last n events from GitHub events API
+
+            %%test-gh-events <limit>
+        """
+
+        try:
+            limit = int(args["<limit>"])
+        except ValueError:
+            yield "invalid argument: not an int: %s" % args["<limit>"]
+            return
+
+        try:
+            events = self.github_events_api_client.fetch_events()
+
+        except requests.HTTPError as e:
+            # might have run into a rate limit
+            # just ignore it for now
+            print("HTTP error while fetching events from GitHub:", e)
+
+        else:
+            for event in events[:limit]:
+                notice = self._format_github_event(event)
+                self.bot.notice(target, notice)
+
     @command(name="bug", permission="view")
     def bug(self, mask, target, args):
         """Show link to issue tracker.
