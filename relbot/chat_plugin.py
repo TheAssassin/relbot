@@ -31,8 +31,10 @@ class RELBotPlugin:
         except KeyError:
             self.jokes_manager = None
 
-        if self._get_github_events_channels():
-            self.logger.info("Setting up GitHub events API integration")
+        events_channels = self._get_github_events_channels()
+
+        if events_channels:
+            self.logger.info("Setting up GitHub events API integration (channels enabled: %r)", events_channels)
             self.github_events_api_client = GithubEventsAPIClient("blue-nebula")
             self.github_events_api_client.setup()
             self.logger.info("Finished setting up GitHub events API integration")
@@ -393,8 +395,13 @@ class RELBotPlugin:
             for event in events:
                 notice = self._format_github_event(event)
 
+                self.logger.info(notice)
+
                 for target in channels:
                     self.bot.notice(target, notice)
+
+            else:
+                self.logger.info(self._format_github_event("no new events to report"))
 
     @command(name="test-gh-events", permssion="admin", show_in_help_list=False)
     def test_proxy(self, mask, target, args):
