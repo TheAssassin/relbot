@@ -1,6 +1,6 @@
 import string
 from collections import namedtuple
-from typing import Iterator
+from typing import Iterator, List
 
 from relbot.util import managed_proxied_session
 
@@ -204,57 +204,39 @@ class GithubEventsAPIClient:
         # while set to <0, nothing should be reported
         self.last_reported_id = -1
 
-        # we store the ETag header so we can send it as If-None-Match to the API endpoint
-        # this may then return a 304 No Modified response and doesn't trigger the API limits
-        # this way, we can poll somewhat safely every minute
-        self.last_modified = None
+        # we store the last response
+        # the client can use it to check whether anything has changed, and if this is not the case return the cached
+        # data
+        self.cached_response = None
 
-    def _fetch_data(self) -> dict:
+    def fetch_events(self) -> List[GitHubEvent]:
         url = "https://api.github.com/orgs/%s/events" % self.organization
 
         with managed_proxied_session() as session:
             headers = {}
 
-            if self.last_modified:
-                headers["if-modified-since"] = self.last_modified
+            # we use the last-modified header of the cached response to avoid running into API rate limits
+            # that way, we save responses as long as nothing has changed, as GitHub will return a 304 response
+            # this way, we can poll somewhat safely every minute
+            if self.cached_response:
+                headers["if-modified-since"] = self.cached_response.headers["last-modified"]
 
             response = session.get(url, allow_redirects=True, headers=headers)
 
         response.raise_for_status()
 
         if response.status_code == 304:
-            return {}
+            response = self.cached_response
 
-        self.last_modified = response.headers["last-modified"]
+        elif response.status_code == 200:
+            self.cached_response = response
+
+        else:
+            raise ValueError("invalid response status code %d" % response.status_code)
 
         data = response.json()
 
-        self.last_reported_id = int(data[0]["id"])
-
-        return data
-
-    def setup(self):
-        """
-        Calls GitHub API once initially. The instance remembers which messages were existing at this point, and will
-        return only events newer than that.
-        """
-
-        data = self._fetch_data()
-
-        initial_event = data[0]
-        initial_id = int(initial_event["id"])
-
-        self.last_reported_id = initial_id
-
-    @staticmethod
-    def _parse_push_event(payload: dict):
-        return PushEventPayload(payload["size"], payload["ref"])
-
-    def fetch_new_events(self) -> Iterator[GitHubEvent]:
-        assert int(self.last_reported_id) > 0, "events have never been checked before -- forgot to call setup()?"
-
-        # we need to make sure all entries are sorted properly
-        data = list(reversed(sorted(self._fetch_data(), key=lambda i: i["id"])))
+        events = []
 
         for entry in data:
             try:
@@ -264,7 +246,39 @@ class GithubEventsAPIClient:
             except UnsupportedEventError:
                 continue
 
-            if int(event.id) < int(self.last_reported_id):
+            else:
+                events.append(event)
+
+        # make sure the events are sorted in a descending order (this is how GitHub returns them by default)
+        events.sort(key=lambda i: i.id, reverse=True)
+
+        # sanity check
+        assert events[0].id > events[1].id
+
+        self.last_reported_id = int(events[0].id)
+
+        return events
+
+    def setup(self):
+        """
+        Calls GitHub API once initially. The instance remembers which messages were existing at this point, and will
+        return only events newer than that.
+        """
+
+        events = self.fetch_events()
+
+        # make sure fetch_new_events ignores all events which happened up to this point
+        initial_event = events[0]
+        self.last_reported_id = int(initial_event.id)
+
+    def fetch_new_events(self) -> Iterator[GitHubEvent]:
+        assert int(self.last_reported_id) > 0, "events have never been checked before -- forgot to call setup()?"
+
+        # we need to make sure all entries are sorted properly
+        events = self.fetch_events()
+
+        for event in events:
+            if int(event.id) <= int(self.last_reported_id):
                 break
 
             yield event
@@ -276,8 +290,7 @@ if __name__ == "__main__":
     # for debugging we print all events we can possibly get
     client.last_reported_id = 1
 
-    lines = [str(i) for i in client.fetch_new_events()]
-    lines.reverse()
+    lines = [str(i) for i in client.fetch_events()]
 
     print("\n".join(lines))
 
