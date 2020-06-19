@@ -52,7 +52,7 @@ class GitHubEvent(namedtuple("GitHubEvent", ["id", "type", "actor", "repo", "dat
         payload = data["payload"]
 
         event = GitHubEvent(
-            data["id"],
+            int(data["id"]),
             event_type,
             format_user_name(data["actor"]["display_login"]),
             data["repo"]["name"],
@@ -245,9 +245,10 @@ class GithubEventsAPIClient:
         return PushEventPayload(payload["size"], payload["ref"])
 
     def fetch_new_events(self) -> Iterator[GitHubEvent]:
-        assert self.last_reported_id > 0, "events have never been checked before -- forgot to call setup()?"
+        assert int(self.last_reported_id) > 0, "events have never been checked before -- forgot to call setup()?"
 
-        data = self._fetch_data()
+        # we need to make sure all entries are sorted properly
+        data = list(reversed(sorted(self._fetch_data(), key=lambda i: i["id"])))
 
         for entry in data:
             try:
@@ -257,8 +258,7 @@ class GithubEventsAPIClient:
             except UnsupportedEventError:
                 continue
 
-            # this check trusts that GitHub reports events in the right order
-            if event.id <= self.last_reported_id:
+            if int(event.id) < int(self.last_reported_id):
                 break
 
             yield event
