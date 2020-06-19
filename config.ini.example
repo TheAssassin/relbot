@@ -27,6 +27,8 @@ handler = relbot.log.StdoutHandler
 
 [relbot]
 # redflare_url = https://my.redflare.instance
+# jokes_file = jokes.txt
+# github_events_channels = #mychan #myotherchan
 
 [irc3.plugins.feeds]
 
