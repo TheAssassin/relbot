@@ -35,7 +35,7 @@ class RELBotPlugin:
     def _relbot_config(self):
         return self.bot.config.get("relbot", dict())
 
-    @command(name="test-proxy", permssion="admin")
+    @command(name="test-proxy", permssion="admin", show_in_help_list=False)
     def test_proxy(self, mask, target, args):
         """bla
 
