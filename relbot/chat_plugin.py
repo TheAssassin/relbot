@@ -14,13 +14,15 @@ from .github_events_api_client import GithubEventsAPIClient
 from .jokes import JokesManager
 from .redflare_client import RedflareClient
 from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
-from .util import managed_proxied_session
+from .util import managed_proxied_session, make_logger
 from .wikipedia_client import WikipediaAPIError, WikipediaAPIClient
 
 
 @irc3.plugin
 class RELBotPlugin:
     def __init__(self, bot):
+        self.logger = make_logger("RELBotPlugin")
+
         self.bot = bot
         self.redflare_url = self._relbot_config().get("redflare_url", None)
 
@@ -29,11 +31,21 @@ class RELBotPlugin:
         except KeyError:
             self.jokes_manager = None
 
-        self.github_events_api_client = GithubEventsAPIClient("blue-nebula")
-        self.github_events_api_client.setup()
+        if self._get_github_events_channels():
+            self.logger.info("Setting up GitHub events API integration")
+            self.github_events_api_client = GithubEventsAPIClient("blue-nebula")
+            self.github_events_api_client.setup()
+            self.logger.info("Finished setting up GitHub events API integration")
+
+        else:
+            self.logger.info("GitHub events API integration disabled")
+            self.github_events_api_client = None
 
     def _relbot_config(self):
         return self.bot.config.get("relbot", dict())
+
+    def _get_github_events_channels(self):
+        return self._relbot_config().get("github_events_channels", [])
 
     @command(name="test-proxy", permssion="admin", show_in_help_list=False)
     def test_proxy(self, mask, target, args):
@@ -95,7 +107,7 @@ class RELBotPlugin:
                 ircmessage.style(server.map_name, fg="pink"),
             )
 
-            print(repr(message))
+            self.logger.debug(repr(message))
 
             yield message
 
@@ -357,22 +369,25 @@ class RELBotPlugin:
         s = "[GitHub] {}".format(event)
         return s
 
-    @cron("*/2 * * * *")
+    @cron("*/1 * * * *")
     def check_github_events(self):
-        channels = self._relbot_config().get("github_events_channels", None)
+        channels = self._get_github_events_channels()
 
         if not channels:
+            self.logger.debug("cron job check_github_events skipped: no channels configured")
             return
 
         channels = channels.split(" ")
 
+        self.logger.info("cron job running: check_github_events %r", channels)
+
         try:
             events = self.github_events_api_client.fetch_new_events()
 
-        except requests.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             # might have run into a rate limit
             # just ignore it for now
-            print("HTTP error while fetching events from GitHub:", e)
+            self.logger.error("HTTP error while fetching events from GitHub:", e)
 
         else:
             for event in events:
@@ -397,7 +412,7 @@ class RELBotPlugin:
         try:
             events = self.github_events_api_client.fetch_events()
 
-        except requests.HTTPError as e:
+        except requests.exceptions.HTTPError as e:
             # might have run into a rate limit
             # just ignore it for now
             print("HTTP error while fetching events from GitHub:", e)
