@@ -254,6 +254,10 @@ class GithubEventsAPIClient:
             except UnsupportedEventError:
                 continue
 
+            # this check trusts that GitHub reports events in the right order
+            if event.id <= self.last_reported_id:
+                break
+
             yield event
 
 
