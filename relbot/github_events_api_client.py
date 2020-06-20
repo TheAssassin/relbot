@@ -159,6 +159,11 @@ class PullRequestEventPayload(namedtuple("PullRequestEventPayload", ["action", "
         if action not in cls.SUPPORTED_EVENTS:
             raise UnsupportedEventError()
 
+        try:
+            merged_by = format_user_name(pr["merged_by"]["login"])
+        except TypeError:
+            merged_by = None
+
         return cls(
             action,
             format_id(data["number"]),
@@ -166,7 +171,7 @@ class PullRequestEventPayload(namedtuple("PullRequestEventPayload", ["action", "
             pr["title"],
             format_user_name(pr["user"]["login"]),
             pr["merged"],
-            format_user_name(pr["merged_by"]["login"]),
+            merged_by,
         )
 
     def __str__(self):
