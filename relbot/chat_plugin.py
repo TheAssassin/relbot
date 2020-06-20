@@ -335,7 +335,8 @@ class RELBotPlugin:
 
     @irc3.event(irc3.rfc.PRIVMSG)
     def github_integration(self, mask, target, data, **kwargs):
-        """Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
+        """
+        Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
         if possible.
         Uses web scraping instead of any annoying
         Note: cannot use yield to send replies; it'll fail silently then
@@ -343,12 +344,14 @@ class RELBotPlugin:
 
         # skip all commands
         if any((data.strip(" \r\n").startswith(i) for i in [self.bot.config["cmd"], self.bot.config["re_cmd"]])):
+            self.logger.warning("ignoring command: %s", data)
             return
 
         # this regex will just match any string, even if embedded in some other string
         # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
         # integration
         issue_ids = re.findall(r"#([0-9]+)", data)
+        self.logger.debug("found IDs: %r", issue_ids)
 
         for issue_id in issue_ids:
             # we just check the issues URL; GitHub should automatically redirect to pull requests
@@ -381,6 +384,9 @@ class RELBotPlugin:
             notice = self._format_github_event("{} #{}: {} ({})".format(type, issue_id, title, response.url))
 
             self.bot.notice(target, notice)
+
+        else:
+            self.logger.debug("could not find any GitHub IDs in message")
 
     @staticmethod
     def _format_github_event(event):
