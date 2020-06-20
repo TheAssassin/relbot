@@ -363,7 +363,7 @@ class RELBotPlugin:
                 else:
                     message = "Request to GitHub failed"
 
-                yield self._format_github_event(message)
+                self.bot.notice(target, self._format_github_event(message))
 
                 return
 
