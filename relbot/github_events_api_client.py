@@ -254,6 +254,9 @@ class GithubEventsAPIClient:
             except UnsupportedEventError:
                 continue
 
+            except:  # noqa
+                self.logger.exception("Failed to parse event (unknown error), skipping")
+
             else:
                 events.append(event)
 
