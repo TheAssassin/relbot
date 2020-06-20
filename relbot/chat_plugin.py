@@ -14,7 +14,7 @@ from .github_events_api_client import GithubEventsAPIClient
 from .jokes import JokesManager
 from .redflare_client import RedflareClient
 from .urbandictionary_client import UrbanDictionaryClient, UrbanDictionaryError
-from .util import managed_proxied_session, make_logger
+from .util import managed_proxied_session, make_logger, format_github_event
 from .wikipedia_client import WikipediaAPIError, WikipediaAPIClient
 
 
@@ -333,66 +333,6 @@ class RELBotPlugin:
         else:
             yield "%s gets a cookie from the jar." % args["<nick>"]
 
-    @irc3.event(irc3.rfc.PRIVMSG)
-    def github_integration(self, mask, target, data, **kwargs):
-        """
-        Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
-        if possible.
-        Uses web scraping instead of any annoying
-        Note: cannot use yield to send replies; it'll fail silently then
-        """
-
-        # skip all commands
-        if any((data.strip(" \r\n").startswith(i) for i in [self.bot.config["cmd"], self.bot.config["re_cmd"]])):
-            self.logger.warning("ignoring command: %s", data)
-            return
-
-        # this regex will just match any string, even if embedded in some other string
-        # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
-        # integration
-        issue_ids = re.findall(r"#([0-9]+)", data)
-        self.logger.debug("found IDs: %r", issue_ids)
-
-        for issue_id in issue_ids:
-            # we just check the issues URL; GitHub should automatically redirect to pull requests
-            url = "https://github.com/blue-nebula/base/issues/{}".format(issue_id)
-
-            with managed_proxied_session() as session:
-                response = session.get(url, allow_redirects=True)
-
-            if response.status_code != 200:
-                if response.status_code == 404:
-                    message = "Could not find anything for #{}".format(issue_id)
-                else:
-                    message = "Request to GitHub failed"
-
-                self.bot.notice(target, self._format_github_event(message))
-
-                return
-
-            tree = html.fromstring(response.content)
-            title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
-
-            url_parts = response.url.split("/")
-            if "pull" in url_parts:
-                type = "PR"
-            elif "issues" in url_parts:
-                type = "Issue"
-            else:
-                type = "Unknown Entity"
-
-            notice = self._format_github_event("{} #{}: {} ({})".format(type, issue_id, title, response.url))
-
-            self.bot.notice(target, notice)
-
-        else:
-            self.logger.debug("could not find any GitHub IDs in message")
-
-    @staticmethod
-    def _format_github_event(event):
-        s = "[GitHub] {}".format(event)
-        return s
-
     @cron("*/1 * * * *")
     def check_github_events(self):
         channels = self._get_github_events_channels()
@@ -413,7 +353,7 @@ class RELBotPlugin:
 
         else:
             for event in events:
-                notice = self._format_github_event(event)
+                notice = format_github_event(event)
 
                 self.logger.info(notice)
 
@@ -421,7 +361,7 @@ class RELBotPlugin:
                     self.bot.notice(target, notice)
 
             else:
-                self.logger.info(self._format_github_event("no new events to report"))
+                self.logger.info(format_github_event("no new events to report"))
 
     @command(name="test-gh-events", permssion="admin", show_in_help_list=False)
     def test_proxy(self, mask, target, args):
@@ -446,7 +386,7 @@ class RELBotPlugin:
 
         else:
             for event in events[:limit]:
-                notice = self._format_github_event(event)
+                notice = format_github_event(event)
                 self.bot.notice(target, notice)
 
     @command(name="bug", permission="view")

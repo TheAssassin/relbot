@@ -6,6 +6,11 @@ import sys
 import requests
 
 
+def format_github_event(event):
+    s = "[GitHub] {}".format(event)
+    return s
+
+
 @contextlib.contextmanager
 def managed_proxied_session():
     """
