@@ -9,7 +9,12 @@ class UnsupportedEventError(Exception):
     """
     Thrown whenever an event type is not supported or the specific payload format is not understood.
     """
-    pass
+
+    def __init__(self, event_type: str):
+        self.event_type = event_type
+
+    def __str__(self):
+        return "Unsupported event: {}".format(self.event_type)
 
 
 def format_user_name(name):
@@ -47,7 +52,7 @@ class GitHubEvent(namedtuple("GitHubEvent", ["id", "type", "actor", "repo", "dat
             payload_class = IssueCommentEventPayload
 
         if payload_class is None:
-            raise UnsupportedEventError()
+            raise UnsupportedEventError(event_type)
 
         payload = data["payload"]
 
@@ -131,7 +136,7 @@ class IssueCommentEventPayload(namedtuple("IssueCommentEventPayload", ["number",
     @classmethod
     def from_json(cls, data: dict):
         if data["action"] != "created":
-            raise UnsupportedEventError()
+            raise UnsupportedEventError(data["action"])
 
         issue = data["issue"]
 
@@ -257,7 +262,8 @@ class GithubEventsAPIClient:
                 event = GitHubEvent.from_json(entry)
 
             # we just ignore all events we don't understand
-            except UnsupportedEventError:
+            except UnsupportedEventError as e:
+                self.logger.debug(str(e))
                 continue
 
             except:  # noqa
