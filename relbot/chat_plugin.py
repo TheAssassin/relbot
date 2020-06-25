@@ -407,7 +407,7 @@ class RELBotPlugin:
             %%restart-bot
         """
 
-        os.execl(sys.executable, sys.executable, * sys.argv)
+        os.execl(sys.executable, sys.executable, *sys.argv)
 
     @classmethod
     def reload(cls, old):
