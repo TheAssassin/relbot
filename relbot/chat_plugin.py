@@ -1,5 +1,7 @@
 import itertools
+import os
 import random
+import sys
 from urllib.parse import urlencode
 
 import requests
@@ -397,6 +399,15 @@ class RELBotPlugin:
         """
 
         yield "https://github.com/TheAssassin/relbot/issues/new"
+
+    @command(name="restart-bot", permission="admin")
+    def restart(self, mask, target, args):
+        """Restart entire bot.
+
+            %%restart-bot
+        """
+
+        os.execl(sys.executable, sys.executable, * sys.argv)
 
     @classmethod
     def reload(cls, old):
