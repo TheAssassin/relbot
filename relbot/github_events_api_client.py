@@ -127,7 +127,7 @@ class IssuesEventPayload(namedtuple("IssuesEventPayload", ["action", "number", "
         return fmt.format(**data)
 
 
-class IssueCommentEventPayload(namedtuple("IssueCommentEventPayload", ["number", "url", "title", "creator"])):
+class IssueCommentEventPayload(namedtuple("IssueCommentEventPayload", ["number", "url", "title", "creator", "type"])):
     @classmethod
     def from_json(cls, data: dict):
         if data["action"] != "created":
@@ -135,15 +135,21 @@ class IssueCommentEventPayload(namedtuple("IssueCommentEventPayload", ["number",
 
         issue = data["issue"]
 
+        if issue.get("pull_request", None):
+            type_ = "pull request"
+        else:
+            type_ = "issue"
+
         return cls(
             format_id(issue["number"]),
             issue["html_url"],
             issue["title"],
             format_user_name(issue["user"]["login"]),
+            type_
         )
 
     def __str__(self):
-        fmt = "commented on issue {number}: {title} (opened by {creator}, {url})"
+        fmt = "commented on {type} {number}: {title} (opened by {creator}, {url})"
         return fmt.format(**self._asdict())
 
 
