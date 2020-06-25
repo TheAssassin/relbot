@@ -51,6 +51,9 @@ class GitHubEvent(namedtuple("GitHubEvent", ["id", "type", "actor", "repo", "dat
         elif event_type == "IssueCommentEvent":
             payload_class = IssueCommentEventPayload
 
+        elif event_type == "ReleaseEvent":
+            payload_class = ReleaseEvent
+
         if payload_class is None:
             raise UnsupportedEventError(event_type)
 
@@ -166,6 +169,31 @@ class IssueCommentEventPayload(namedtuple("IssueCommentEventPayload", ["number",
     def __str__(self):
         fmt = "commented on {type} {number}: {title} (opened by {creator}, {url})"
         return fmt.format(**self._asdict())
+
+
+class ReleaseEvent(namedtuple("ReleaseEvent", ["action", "release_name", "repo_name", "creator", "url", "prerelease"])):
+    @classmethod
+    def from_json(cls, data: dict, repo: dict):
+        release = data["release"]
+
+        return cls(
+            data["action"],
+            release["name"],
+            repo["name"],
+            format_user_name(release["author"]["login"]),
+            release["html_url"],
+            release["prerelease"],
+        )
+
+    def __str__(self):
+        fmt = "{action} {type} in repository {repo_name}: {release_name} (created by {creator}, {url})"
+
+        type_ = "release"
+
+        if self.prerelease:
+            type_ = "prerelease"
+
+        return fmt.format(type=type_, **self._asdict())
 
 
 class PullRequestEventPayload(namedtuple("PullRequestEventPayload", ["action", "number", "url", "title", "creator", "merged", "merged_by"])):
