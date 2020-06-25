@@ -55,6 +55,9 @@ class GitHubEvent(namedtuple("GitHubEvent", ["id", "type", "actor", "repo", "dat
             raise UnsupportedEventError(event_type)
 
         payload = data["payload"]
+        
+        # needed for create events
+        repo = data.get("repo", None)
 
         event = GitHubEvent(
             int(data["id"]),
@@ -62,7 +65,7 @@ class GitHubEvent(namedtuple("GitHubEvent", ["id", "type", "actor", "repo", "dat
             format_user_name(data["actor"]["display_login"]),
             data["repo"]["name"],
             data["created_at"],
-            payload_class.from_json(payload),
+            payload_class.from_json(payload, repo),
         )
 
         return event
@@ -73,7 +76,7 @@ class GitHubEvent(namedtuple("GitHubEvent", ["id", "type", "actor", "repo", "dat
 
 class PushEventPayload(namedtuple("PushEventPayload", ["size", "ref"])):
     @classmethod
-    def from_json(cls, data: dict):
+    def from_json(cls, data: dict, repo: dict):
         return cls(data["size"], data["ref"])
 
     def __str__(self):
@@ -82,8 +85,15 @@ class PushEventPayload(namedtuple("PushEventPayload", ["size", "ref"])):
 
 class CreateEventPayload(namedtuple("CreateEventPayload", ["ref", "ref_type"])):
     @classmethod
-    def from_json(cls, data: dict):
-        return cls(data["ref"], data["ref_type"])
+    def from_json(cls, data: dict, repo: dict):
+        ref_type = data["ref_type"]
+
+        ref = data["ref"]
+
+        if not ref:
+            ref = repo["name"]
+
+        return cls(ref, ref_type)
 
     def __str__(self):
         return "created {} {}".format(self.ref_type, self.ref)
@@ -91,7 +101,7 @@ class CreateEventPayload(namedtuple("CreateEventPayload", ["ref", "ref_type"])):
 
 class DeleteEventPayload(namedtuple("DeleteEventPayload", ["ref", "ref_type"])):
     @classmethod
-    def from_json(cls, data: dict):
+    def from_json(cls, data: dict, repo: dict):
         return cls(data["ref"], data["ref_type"])
 
     def __str__(self):
@@ -102,7 +112,7 @@ class IssuesEventPayload(namedtuple("IssuesEventPayload", ["action", "number", "
     SUPPORTED_ACTIONS = ["opened", "closed", "reopened"]
 
     @classmethod
-    def from_json(cls, data: dict):
+    def from_json(cls, data: dict, repo: dict):
         action = data["action"]
 
         # we can safely ignore assignment and labelling events
@@ -134,7 +144,7 @@ class IssuesEventPayload(namedtuple("IssuesEventPayload", ["action", "number", "
 
 class IssueCommentEventPayload(namedtuple("IssueCommentEventPayload", ["number", "url", "title", "creator", "type"])):
     @classmethod
-    def from_json(cls, data: dict):
+    def from_json(cls, data: dict, repo: dict):
         if data["action"] != "created":
             raise UnsupportedEventError(data["action"])
 
@@ -162,7 +172,7 @@ class PullRequestEventPayload(namedtuple("PullRequestEventPayload", ["action", "
     SUPPORTED_EVENTS = ["opened", "closed", "reopened"]
 
     @classmethod
-    def from_json(cls, data: dict):
+    def from_json(cls, data: dict, repo: dict):
         pr = data["pull_request"]
 
         action = data["action"]
