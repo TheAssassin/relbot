@@ -354,7 +354,7 @@ class RELBotPlugin:
             self.logger.error("HTTP error while fetching events from GitHub:", e)
 
         else:
-            for event in events:
+            for event in reversed(events):
                 notice = format_github_event(event)
 
                 self.logger.info(notice)
@@ -387,7 +387,7 @@ class RELBotPlugin:
             print("HTTP error while fetching events from GitHub:", e)
 
         else:
-            for event in events[:limit]:
+            for event in reversed(events[:limit]):
                 notice = format_github_event(event)
                 self.bot.notice(target, notice)
 
