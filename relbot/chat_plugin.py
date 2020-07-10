@@ -346,7 +346,8 @@ class RELBotPlugin:
         self.logger.info("cron job running: check_github_events %r", channels)
 
         try:
-            events = self.github_events_api_client.fetch_new_events()
+            # need a list to be able to slice and reverse the events
+            events = list(self.github_events_api_client.fetch_new_events())
 
         except requests.exceptions.HTTPError as e:
             # might have run into a rate limit
