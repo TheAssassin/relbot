@@ -34,6 +34,3 @@ handler = relbot.log.StdoutHandler
 # github_events_channels =
 #     ${#}mychannel
 #     ${#}myotherchannel
-
-[irc3.plugins.feeds]
-
