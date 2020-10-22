@@ -291,6 +291,12 @@ class GithubEventsAPIClient:
         else:
             raise ValueError("invalid response status code %d" % response.status_code)
 
+        self.logger.info(
+            "GitHub API limit: %s/%s",
+            response.headers["X-RateLimit-Remaining"],
+            response.headers["X-RateLimit-Limit"]
+        )
+
         data = response.json()
 
         events = []
