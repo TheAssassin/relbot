@@ -11,7 +11,8 @@ includes =
     irc3.plugins.logger
     irc3.plugins.uptime
     relbot.chat_plugin
-    relbot.github_integration
+    relbot.github_chat_monitor
+    relbot.github_events_feed_plugin
 
 autojoins =
     ${#}mychannel

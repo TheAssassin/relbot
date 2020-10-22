@@ -9,7 +9,7 @@ logger = make_logger("github_integration")
 
 
 @irc3.event(irc3.rfc.PRIVMSG)
-def github_integration(bot, mask, target, data, **kwargs):
+def github_chat_monitor(bot, mask, target, data, **kwargs):
     """
     Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
     if possible.
