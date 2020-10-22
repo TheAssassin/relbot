@@ -7,7 +7,6 @@ port = 6667
 
 includes =
     irc3.plugins.command
-    irc3.plugins.feeds
     irc3.plugins.logger
     irc3.plugins.uptime
     relbot.chat_plugin
