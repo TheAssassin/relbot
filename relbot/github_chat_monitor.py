@@ -1,4 +1,5 @@
 import re
+import string
 
 import irc3
 from lxml import html
@@ -25,19 +26,53 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
     # this regex will just match any string, even if embedded in some other string
     # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
     # integration
-    issue_ids = re.findall(r"#([0-9]+)", data)
-    logger.debug("found IDs: %r", issue_ids)
+    matches = re.findall(r"([^/]+/)([^#]+)?#([0-9]+)", data)
+    logger.debug("GitHub issue/PR matches: %r", matches)
 
-    for issue_id in issue_ids:
+    for match in matches:
+        if len(match) == 3:
+            repo_owner, repo_name, issue_id = match
+
+        elif len(match) == 2:
+            repo_owner = "blue-nebula"
+            repo_name, issue_id = match
+
+        elif len(match) == 1:
+            repo_owner = "blue-nebula"
+            repo_name = "base"
+            issue_id = match
+
+        else:
+            logger.debug("unexpected arguments in GitHub ID: %r", match)
+            return
+
+        # our match might contain at least one slash, so we need to get rid of that
+        repo_owner = repo_owner.rstrip("/")
+
+        def is_valid_name(s: str):
+            for c in s:
+                if c not in string.ascii_letters + string.digits + "-_":
+                    return False
+
+            return True
+
+        if not is_valid_name(repo_owner) or not is_valid_name(repo_name):
+            logger.warning("Invalid repository owner or name: %s/%s", repo_owner, repo_name)
+            continue
+
+        if not issue_id.isdigit():
+            logger.warning("Invalid issue ID: %s", issue_id)
+            continue
+
         # we just check the issues URL; GitHub should automatically redirect to pull requests
-        url = "https://github.com/blue-nebula/base/issues/{}".format(issue_id)
+        url = "https://github.com/{}/{}/issues/{}".format(repo_owner, repo_name, issue_id)
 
         with managed_proxied_session() as session:
             response = session.get(url, allow_redirects=True)
 
         if response.status_code != 200:
             if response.status_code == 404:
-                message = "Could not find anything for #{}".format(issue_id)
+                message = "Could not find anything for {}/{}#{}".format(repo_owner, repo_name, issue_id)
             else:
                 message = "Request to GitHub failed"
 
@@ -61,4 +96,4 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         bot.notice(target, notice)
 
     else:
-        logger.debug("could not find any GitHub IDs in message")
+        logger.debug("could not find any GitHub IDs in message: %s", data)
