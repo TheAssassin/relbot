@@ -18,6 +18,12 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
     Note: cannot use yield to send replies; it'll fail silently then
     """
 
+    # do not react on notices
+    # this should prevent the bot from replying to other bots
+    if kwargs["event"].lower() != "privmsg":
+        logger.debug("ignoring %s event", kwargs["event"])
+        return
+
     # skip all commands
     if any((data.strip(" \r\n").startswith(i) for i in [bot.config["cmd"], bot.config["re_cmd"]])):
         logger.warning("ignoring command: %s", data)
