@@ -26,7 +26,7 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
     # this regex will just match any string, even if embedded in some other string
     # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
     # integration
-    matches = re.findall(r"([^/]+/)?([^#]+)?#([0-9]+)", data)
+    matches = re.findall(r"([A-Za-z-_]+/)?([A-Za-z-_]+)?#([0-9]+)", data)
     logger.debug("GitHub issue/PR matches: %r", matches)
 
     github_chat_monitor_config = bot.config.get("github_chat_monitor", dict())
