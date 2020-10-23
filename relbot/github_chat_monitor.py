@@ -53,6 +53,12 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         if not repo_name:
             repo_name = default_repo_name
 
+        # substitute short aliases with the actual repo name, if such aliases are configured
+        for short_name, real_name in [i.split(":") for i in github_chat_monitor_config.get("aliases", [])]:
+            if repo_name == short_name.lower():
+                repo_name = real_name
+                break
+
         # our match might contain at least one slash, so we need to get rid of that
         repo_owner = repo_owner.rstrip("/")
 
