@@ -38,26 +38,14 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         bot.notice(target, "error: default repo owner and/or name not configured")
         return
 
-    for match in matches:
-        if len(match) == 3:
-            repo_owner, repo_name, issue_id = match
-
-            # may be an empty string, for some reason
-            if not repo_owner:
-                repo_owner = default_repo_owner
-
-        elif len(match) == 2:
+    for repo_owner, repo_name, issue_id in matches:
+        # the regex might match an empty string, for some reason
+        # in that case, we just set the default values
+        if not repo_owner:
             repo_owner = default_repo_owner
-            repo_name, issue_id = match
 
-        elif len(match) == 1:
-            repo_owner = default_repo_owner
+        if not repo_name:
             repo_name = default_repo_name
-            issue_id = match
-
-        else:
-            logger.debug("unexpected arguments in GitHub ID: %r", match)
-            return
 
         # our match might contain at least one slash, so we need to get rid of that
         repo_owner = repo_owner.rstrip("/")
