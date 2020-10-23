@@ -100,6 +100,3 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         notice = format_github_event("{} #{}: {} ({})".format(type, issue_id, title, response.url))
 
         bot.notice(target, notice)
-
-    else:
-        logger.debug("could not find any GitHub IDs in message: %s", data)
