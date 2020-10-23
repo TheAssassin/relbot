@@ -55,7 +55,7 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
 
         # substitute short aliases with the actual repo name, if such aliases are configured
         for short_name, real_name in [i.split(":") for i in github_chat_monitor_config.get("aliases", [])]:
-            if repo_name == short_name.lower():
+            if repo_name.lower() == short_name.lower():
                 repo_name = real_name
                 break
 
