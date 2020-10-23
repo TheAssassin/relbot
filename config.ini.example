@@ -12,6 +12,7 @@ includes =
     relbot.chat_plugin
     relbot.github_chat_monitor
     relbot.github_events_feed_plugin
+    relbot.bn_plugin
 
 autojoins =
     ${#}mychannel
@@ -35,5 +36,5 @@ handler = relbot.log.StdoutHandler
 #     ${#}myotherchannel
 
 [github_chat_monitor]
-default_repo_owner = "my-owner"
-default_repo_name = "my-repo"
+default_repo_owner = my-owner
+default_repo_name = my-repo
