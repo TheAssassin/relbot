@@ -26,20 +26,33 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
     # this regex will just match any string, even if embedded in some other string
     # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
     # integration
-    matches = re.findall(r"([^/]+/)([^#]+)?#([0-9]+)", data)
+    matches = re.findall(r"([^/]+/)?([^#]+)?#([0-9]+)", data)
     logger.debug("GitHub issue/PR matches: %r", matches)
+
+    github_chat_monitor_config = bot.config.get("github_chat_monitor", dict())
+
+    try:
+        default_repo_owner = github_chat_monitor_config["default_repo_owner"]
+        default_repo_name = github_chat_monitor_config["default_repo_name"]
+    except KeyError:
+        bot.notice(target, "error: default repo owner and/or name not configured")
+        return
 
     for match in matches:
         if len(match) == 3:
             repo_owner, repo_name, issue_id = match
 
+            # may be an empty string, for some reason
+            if not repo_owner:
+                repo_owner = default_repo_owner
+
         elif len(match) == 2:
-            repo_owner = "blue-nebula"
+            repo_owner = default_repo_owner
             repo_name, issue_id = match
 
         elif len(match) == 1:
-            repo_owner = "blue-nebula"
-            repo_name = "base"
+            repo_owner = default_repo_owner
+            repo_name = default_repo_name
             issue_id = match
 
         else:
@@ -53,7 +66,6 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
             for c in s:
                 if c not in string.ascii_letters + string.digits + "-_":
                     return False
-
             return True
 
         if not is_valid_name(repo_owner) or not is_valid_name(repo_name):
