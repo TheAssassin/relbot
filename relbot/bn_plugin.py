@@ -15,6 +15,7 @@ class RELBotBNPlugin:
         self.logger = make_logger(self.__class__.__name__)
 
         self.bot = bot
+        self.redflare_url = self._relbot_config().get("redflare_url", None)
 
     def _relbot_config(self):
         return self.bot.config.get("relbot", dict())

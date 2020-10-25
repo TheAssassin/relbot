@@ -19,7 +19,6 @@ class RELBotPlugin:
         self.logger = make_logger(self.__class__.__name__)
 
         self.bot = bot
-        self.redflare_url = self._relbot_config().get("redflare_url", None)
 
         try:
             self.jokes_manager = JokesManager(self._relbot_config()["jokes_file"])
