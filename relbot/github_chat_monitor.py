@@ -95,7 +95,7 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
 
             bot.notice(target, format_github_event(message))
 
-            return
+            continue
 
         tree = html.fromstring(response.content)
         title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
