@@ -1,5 +1,6 @@
 import re
 import string
+from typing import Dict, Tuple
 
 import irc3
 from lxml import html
@@ -49,6 +50,9 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         bot.notice(target, "error: default repo owner and/or name not configured")
         return
 
+    # figure out account and repo for all issues to allow for deduplicating them before resolving
+    issues: Dict[str, Tuple[str, str, int]] = dict()
+
     for repo_owner, repo_name, issue_id in matches:
         # the regex might match an empty string, for some reason
         # in that case, we just set the default values
@@ -81,6 +85,17 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
             logger.warning("Invalid issue ID: %s", issue_id)
             continue
 
+        # calculate the unique ID for every issue and put it in a dict
+        # this ensures we don't have duplicates in there
+        issue_tuple = (repo_owner, repo_name, issue_id)
+        # the unique text ID is not case-sensitive, so we just enforce lower-case to make them unique
+        issue_text_id = "{}/{}#{}".format(*issue_tuple).lower()
+
+        issues[issue_text_id] = issue_tuple
+
+    logger.debug("deduplicated issues: %r", issues)
+
+    for repo_owner, repo_name, issue_id in issues.values():
         # we just check the issues URL; GitHub should automatically redirect to pull requests
         url = "https://github.com/{}/{}/issues/{}".format(repo_owner, repo_name, issue_id)
 
