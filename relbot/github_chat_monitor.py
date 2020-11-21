@@ -25,10 +25,11 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         logger.debug("ignoring %s event", kwargs["event"])
         return
 
-    # also ignore what looks like one of these annoying Matrix IRC bridge reply messages
-    if re.search(r'^<[^"]+\s".*">\s.*', data):
-        logger.debug("ignoring potential Matrix IRC bridge reply")
-        return
+    # also ignore quote part in what looks like one of these annoying Matrix IRC bridge reply messages
+    match = re.search(r'^<[^"]+\s".*">\s(.*)', data)
+    if match:
+        logger.debug("ignoring quoted part in potential Matrix IRC bridge reply")
+        data = match.group(1)
 
     # skip all commands
     if any((data.strip(" \r\n").startswith(i) for i in [bot.config["cmd"], bot.config["re_cmd"]])):
