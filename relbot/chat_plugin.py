@@ -73,6 +73,32 @@ class RELBotPlugin:
 
         yield "https://lmgtfy.com/?{}".format(querystring)
 
+    @command(name="lmddgtfy", permission="view")
+    def lmgtfy(self, mask, target, args):
+        """Let me duckduckgo that for you!
+
+            %%lmddgtfy <args>...
+        """
+
+        querystring = urlencode({
+            "q": " ".join(args["<args>"]),
+        })
+
+        yield "https://lmddgtfy.com/?{}".format(querystring)
+
+    @command(name="lmsptfy", permission="view")
+    def lmgtfy(self, mask, target, args):
+        """Let me startpage that for you!
+
+            %%lmsptfy <args>...
+        """
+
+        querystring = urlencode({
+            "q": " ".join(args["<args>"]),
+        })
+
+        yield "https://lmsptfy.com/?{}".format(querystring)
+
     @command(name="ud", permission="view")
     def urbandictionary(self, mask, target, args):
         """Search a term on urbandictionary.com
