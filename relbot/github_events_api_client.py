@@ -275,7 +275,21 @@ class GithubEventsAPIClient:
             # that way, we save responses as long as nothing has changed, as GitHub will return a 304 response
             # this way, we can poll somewhat safely every minute
             if self.cached_response:
-                headers["if-modified-since"] = self.cached_response.headers["last-modified"]
+                for header in ["last-modified", "retry-after", "date"]:
+                    try:
+                        headers["if-modified-since"] = self.cached_response.headers[header]
+
+                    except KeyError:
+                        self.logger.warning("cached response did not contain header %s, trying next", header)
+
+                    else:
+                        break
+
+                else:
+                    self.logger.error(
+                        "cached response did contain any header we could use for if-modified-since, "
+                        "will likely run into rate limit"
+                    )
 
             response = session.get(url, allow_redirects=True, headers=headers)
 
@@ -334,11 +348,15 @@ class GithubEventsAPIClient:
         events = self.fetch_events()
 
         # make sure fetch_new_events ignores all events which happened up to this point
-        initial_event = events[0]
-        self.last_reported_id = int(initial_event.id)
+        try:
+            initial_event = events[0]
+            self.last_reported_id = int(initial_event.id)
+
+        except IndexError:
+            self.last_reported_id = 0
 
     def fetch_new_events(self) -> Iterator[GitHubEvent]:
-        assert int(self.last_reported_id) > 0, "events have never been checked before -- forgot to call setup()?"
+        assert int(self.last_reported_id) >= 0, "events have never been checked before -- forgot to call setup()?"
 
         # we need to make sure all entries are sorted properly
         events = self.fetch_events()
@@ -349,7 +367,9 @@ class GithubEventsAPIClient:
 
             yield event
 
-        self.last_reported_id = int(events[0].id)
+        # events might be an empty list
+        if events:
+            self.last_reported_id = int(events[0].id)
 
 
 if __name__ == "__main__":
@@ -363,10 +383,14 @@ if __name__ == "__main__":
     print("\n".join([str(e) for e in events]))
 
     # try to fetch last event again by convincing the bot it has reported each event but the last one
-    client.last_reported_id = events[1].id
+    if events:
+        client.last_reported_id = events[1].id
 
-    new_events = list(client.fetch_new_events())
-    assert len(new_events) == 1
+        new_events = list(client.fetch_new_events())
+        assert len(new_events) == 1
 
-    # check whether the if-modified-since thing works
-    assert not list(client.fetch_new_events())
+        # check whether the if-modified-since thing works
+        assert not list(client.fetch_new_events())
+
+    else:
+        print("cannot run checks: no events available")
