@@ -319,8 +319,9 @@ class GithubEventsAPIClient:
         # make sure the events are sorted in a descending order (this is how GitHub returns them by default)
         events.sort(key=lambda i: i.id, reverse=True)
 
-        # sanity check
-        assert events[0].id > events[1].id
+        # sanity check (of course, this only works with 2+ events)
+        if len(events) > 2:
+            assert events[0].id > events[1].id
 
         return events
 
