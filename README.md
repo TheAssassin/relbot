@@ -5,7 +5,7 @@ A modular IRC bot, written in Python using asyncio.
 
 ## Background
 
-relbot's origins are in the [Blue Nebula](https://blue-nebula.org) community. It provides various services to the project's IRC channels. Due to its modular nature, it can (and is) also used in other communities (most notably [NewPipe](https://newpipe.net).
+relbot's origins are in the [Blue Nebula](https://blue-nebula.org) community. It provides various services to the project's IRC channels. Due to its modular nature, it can (and is) also used in other communities (most notably [NewPipe](https://newpipe.net)).
 
 Blue Nebula's working title in the first days of the fork was "Red Eclipse Legacy", whose abbreviation is "REL". Hence, the bot is called `relbot`.
 
