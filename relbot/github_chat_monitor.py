@@ -1,6 +1,7 @@
 import re
 import string
-from typing import Dict, Tuple
+import urllib.parse
+from typing import NamedTuple, List, Dict
 
 import irc3
 from lxml import html
@@ -10,32 +11,31 @@ from relbot.util import managed_proxied_session, make_logger, format_github_even
 logger = make_logger("github_integration")
 
 
-@irc3.event(irc3.rfc.PRIVMSG)
-def github_chat_monitor(bot, mask, target, data, **kwargs):
-    """
-    Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
-    if possible.
-    Uses web scraping instead of any annoying
-    Note: cannot use yield to send replies; it'll fail silently then
-    """
+class GitHubChatMonitorError(Exception):
+    def __init__(self, message):
+        self._message = message
 
-    # do not react on notices
-    # this should prevent the bot from replying to other bots
-    if kwargs["event"].lower() != "privmsg":
-        logger.debug("ignoring %s event", kwargs["event"])
-        return
+    def __str__(self):
+        return self._message
 
-    # also ignore quote part in what looks like one of these annoying Matrix IRC bridge reply messages
-    match = re.search(r'^<[^"]+\s".*">\s(.*)', data)
-    if match:
-        logger.debug("ignoring quoted part in potential Matrix IRC bridge reply")
-        data = match.group(1)
 
-    # skip all commands
-    if any((data.strip(" \r\n").startswith(i) for i in [bot.config["cmd"], bot.config["re_cmd"]])):
-        logger.warning("ignoring command: %s", data)
-        return
+class GitHubIssue(NamedTuple):
+    repo_owner: str
+    repo_name: str
+    issue_id: int
 
+    def __str__(self):
+        # calculate the unique ID for every issue and put it in a dict
+        # this ensures we don't have duplicates in there
+        issue_tuple = (self.repo_owner, self.repo_name, self.issue_id)
+
+        # the unique text ID is not case-sensitive, so we just enforce lower-case to make them unique
+        issue_text_id = "{}/{}#{}".format(*issue_tuple).lower()
+
+        return issue_text_id
+
+
+def parse_github_issue_ids(bot, data) -> List[GitHubIssue]:
     # this regex will just match any string, even if embedded in some other string
     # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
     # integration
@@ -48,11 +48,10 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         default_repo_owner = github_chat_monitor_config["default_repo_owner"]
         default_repo_name = github_chat_monitor_config["default_repo_name"]
     except KeyError:
-        bot.notice(target, "error: default repo owner and/or name not configured")
-        return
+        raise GitHubChatMonitorError("default repo owner and/or name not configured")
 
     # figure out account and repo for all issues to allow for deduplicating them before resolving
-    issues: Dict[str, Tuple[str, str, int]] = dict()
+    issues: List[GitHubIssue] = []
 
     for repo_owner, repo_name, issue_id in matches:
         # the regex might match an empty string, for some reason
@@ -86,17 +85,83 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
             logger.warning("Invalid issue ID: %s", issue_id)
             continue
 
-        # calculate the unique ID for every issue and put it in a dict
-        # this ensures we don't have duplicates in there
-        issue_tuple = (repo_owner, repo_name, issue_id)
-        # the unique text ID is not case-sensitive, so we just enforce lower-case to make them unique
-        issue_text_id = "{}/{}#{}".format(*issue_tuple).lower()
+        issues.append(GitHubIssue(repo_owner, repo_name, issue_id))
 
-        issues[issue_text_id] = issue_tuple
+    return issues
 
+
+def parse_github_urls(data) -> List[GitHubIssue]:
+    matches = re.findall(r"(https://github.com/[^\s#]+)", data)
+
+    issues: List[GitHubIssue] = []
+
+    for match in matches:
+        url = urllib.parse.urlparse(match)
+        if url.scheme != "https" or url.netloc != "github.com":
+            continue
+
+        path_fragments = url.path.split("/")
+        if len(path_fragments) < 5:
+            continue
+
+        _, repo_owner, repo_name, _, issue_id = path_fragments[:5]
+        issues.append(GitHubIssue(repo_owner, repo_name, issue_id))
+
+    return issues
+
+
+def deduplicate(issues: List[GitHubIssue]):
+    issues_map: Dict[str, GitHubIssue] = {}
+
+    for issue in issues:
+        issues_map[str(issue)] = issue
+
+    return list(issues_map.values())
+
+
+@irc3.event(irc3.rfc.PRIVMSG)
+def github_chat_monitor(bot, mask, target, data, **kwargs):
+    """
+    Check every message if it contains GitHub references (i.e., some #xyz number), and provide a link to GitHub
+    if possible.
+    Uses web scraping instead of any annoying
+    Note: cannot use yield to send replies; it'll fail silently then
+    """
+
+    # do not react on notices
+    # this should prevent the bot from replying to other bots
+    if kwargs["event"].lower() != "privmsg":
+        logger.debug("ignoring %s event", kwargs["event"])
+        return
+
+    # also ignore quote part in what looks like one of these annoying Matrix IRC bridge reply messages
+    match = re.search(r'^<[^"]+\s".*">\s(.*)', data)
+    if match:
+        logger.debug("ignoring quoted part in potential Matrix IRC bridge reply")
+        data = match.group(1)
+
+    # skip all commands
+    if any((data.strip(" \r\n").startswith(i) for i in [bot.config["cmd"], bot.config["re_cmd"]])):
+        logger.warning("ignoring command: %s", data)
+        return
+
+    try:
+        issues: List[GitHubIssue] = parse_github_issue_ids(bot, data) + parse_github_urls(data)
+
+    except GitHubChatMonitorError as e:
+        bot.notice(target, "Error: {}".format(str(e)))
+        return
+
+    except:
+        message = "Unknown error while parsing GitHub issues"
+        logger.exception(message)
+        bot.notice(target, message)
+        return
+
+    issues = deduplicate(issues)
     logger.debug("deduplicated issues: %r", issues)
 
-    for repo_owner, repo_name, issue_id in issues.values():
+    for repo_owner, repo_name, issue_id in issues:
         # we just check the issues URL; GitHub should automatically redirect to pull requests
         url = "https://github.com/{}/{}/issues/{}".format(repo_owner, repo_name, issue_id)
 
