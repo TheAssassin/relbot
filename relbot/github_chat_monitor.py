@@ -91,7 +91,7 @@ def parse_github_issue_ids(bot, data) -> List[GitHubIssue]:
 
 
 def parse_github_urls(data) -> List[GitHubIssue]:
-    matches = re.findall(r"(https://github.com/[^\s#]+)", data)
+    matches = re.findall(r"(https://github\.com/[-.\w]+/[-.\w]+/(?:pull|issues)/\d+)", data)
 
     issues: List[GitHubIssue] = []
 
