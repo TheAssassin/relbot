@@ -39,7 +39,14 @@ def parse_github_issue_ids(bot, data) -> List[GitHubIssue]:
     # this regex will just match any string, even if embedded in some other string
     # the idea is that when there's e.g., punctuation following an issue number, it will still trigger the
     # integration
-    matches = re.findall(r"([A-Za-z-_]+/)?([A-Za-z-_]+)?#([0-9]+)", data)
+    pattern = r"\s+([A-Za-z-_]+/)?([A-Za-z-_]+)?#([0-9]+)"
+
+    # FIXME: workaround: the space in front of the data allows us to detect issues and PRs at the beginning of messages
+    # the space we require in the pattern prevents false-positive matches within random strings, e.g., URLs with query
+    # strings
+    data = " " + data
+
+    matches = re.findall(pattern, data)
     logger.debug("GitHub issue/PR matches: %r", matches)
 
     github_chat_monitor_config = bot.config.get("github_chat_monitor", dict())
