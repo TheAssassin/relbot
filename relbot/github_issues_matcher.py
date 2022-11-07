@@ -22,7 +22,7 @@ class GitHubIssue(NamedTuple):
         return issue_text_id
 
 
-class GitHubIssuesResolver:
+class GitHubIssuesMatcher:
     def __init__(self, default_organization: str = None, default_repository: str = None, repository_aliases: dict = None):
         self._default_organization = default_organization
         self._default_repository = default_repository

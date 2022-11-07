@@ -3,7 +3,7 @@ import re
 import irc3
 from lxml import html
 
-from relbot.github_issues_resolver import GitHubIssuesResolver
+from relbot.github_issues_matcher import GitHubIssuesMatcher
 from relbot.util import managed_proxied_session, make_logger, format_github_event
 
 logger = make_logger("github_integration")
@@ -65,7 +65,7 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
     else:
         parsed_aliases = None
 
-    resolver = GitHubIssuesResolver(default_organization, default_repository, parsed_aliases)
+    resolver = GitHubIssuesMatcher(default_organization, default_repository, parsed_aliases)
 
     issues = resolver.find_github_issue_ids(data) + resolver.find_github_urls(data)
 
