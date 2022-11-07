@@ -1,8 +1,0 @@
-requests[socks]
-irc3
-feedparser
-ircmessage
-lxml
-cssselect
-beautifulsoup4
-aiocron
