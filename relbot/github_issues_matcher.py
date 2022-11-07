@@ -12,12 +12,21 @@ class GitHubIssue(NamedTuple):
     issue_id: int
 
     def __str__(self):
+        """
+        A string representation of a GitHub issue equivalent to GitHub's absolute identifiers:
+        <organization>/<repository>#<numeric ID>
+
+        Technically, these identifiers are unique and case-insensitive. Any form of case is just used to aid
+        readability. To make unique identifiers which can be used to compare these items in code, just convert it to
+        lower-case.
+        """
+
         # calculate the unique ID for every issue and put it in a dict
         # this ensures we don't have duplicates in there
         issue_tuple = (self.repo_owner, self.repo_name, self.issue_id)
 
         # the unique text ID is not case-sensitive, so we just enforce lower-case to make them unique
-        issue_text_id = "{}/{}#{}".format(*issue_tuple).lower()
+        issue_text_id = "{}/{}#{}".format(*issue_tuple)
 
         return issue_text_id
 
@@ -108,6 +117,6 @@ class GitHubIssuesMatcher:
         issues_map: Dict[str, GitHubIssue] = {}
 
         for issue in issues:
-            issues_map[str(issue)] = issue
+            issues_map[str(issue).lower()] = issue
 
         return list(issues_map.values())
