@@ -102,6 +102,8 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
             type = "PR"
         elif "issues" in url_parts:
             type = "Issue"
+        elif "discussions" in url_parts:
+            type = "Discussion"
         else:
             type = "Unknown Entity"
 

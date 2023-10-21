@@ -94,7 +94,7 @@ class GitHubIssuesMatcher:
 
     @staticmethod
     def find_github_urls(data) -> List[GitHubIssue]:
-        matches = re.findall(r"(https://github.com/.+/.+/(?:issues|pull)/\d+[^\s#]+)", data)
+        matches = re.findall(r"(https://github.com/.+/.+/(?:issues|pull|discussions)/\d+[^\s#]+)", data)
 
         issues: List[GitHubIssue] = []
 
