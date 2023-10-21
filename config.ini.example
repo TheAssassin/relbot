@@ -36,5 +36,7 @@ handler = relbot.log.StdoutHandler
 #     ${#}myotherchannel
 
 [github_chat_monitor]
-default_repo_owner = my-owner
-default_repo_name = my-repo
+default_organization = my-owner
+default_repository = my-repo
+aliases =
+    mr:my-repo
