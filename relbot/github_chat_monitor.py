@@ -48,7 +48,6 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
 
         default_organization = github_chat_monitor_config["default_organization"]
         default_repository = github_chat_monitor_config["default_repository"]
-        aliases = github_chat_monitor_config["aliases"]
 
     except KeyError:
         bot.notice(target, "Error: default repo owner and/or name not configured")
@@ -60,10 +59,16 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         bot.notice(target, message)
         return
 
-    if aliases:
-        parsed_aliases = {i: j for i, j in (i.split(":") for i in aliases)}
-    else:
-        parsed_aliases = None
+    try:
+        aliases = github_chat_monitor_config["aliases"]
+
+        if aliases:
+            parsed_aliases = {i: j for i, j in (i.split(":") for i in aliases)}
+        else:
+            parsed_aliases = None
+
+    except KeyError:
+        pass
 
     resolver = GitHubIssuesMatcher(default_organization, default_repository, parsed_aliases)
 
