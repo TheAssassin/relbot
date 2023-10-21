@@ -61,12 +61,10 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
 
     try:
         aliases = github_chat_monitor_config["aliases"]
+        parsed_aliases = {i: j for i, j in (i.split(":") for i in aliases)}
 
-        if aliases:
-            parsed_aliases = {i: j for i, j in (i.split(":") for i in aliases)}
-
-    except KeyError:
-        parsed_aliases = None
+    except (KeyError, TypeError):
+        parsed_aliases = {}
 
     resolver = GitHubIssuesMatcher(default_organization, default_repository, parsed_aliases)
 
