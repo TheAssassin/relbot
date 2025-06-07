@@ -2,7 +2,7 @@ import itertools
 import random
 
 import irc3
-import ircmessage
+import irccodes
 from irc3.plugins.command import command
 
 from relbot.redflare_client import RedflareClient
@@ -45,7 +45,7 @@ class RELBotBNPlugin:
             players = [p.name for p in server.players]
 
             # the colors we use to format player names
-            colors = ["red", "pink", "green", "teal", "orange", None]
+            colors = ["light red", "pink", "green", "light green", "orange", None]
             # make things a bit more interesting by randomizing the order
             random.shuffle(colors)
             # however, once the order is defined, just apply those colors in the ever same order to nicks in the list
@@ -63,13 +63,18 @@ class RELBotBNPlugin:
             else:
                 time_remaining_str = "%d:%d left" % (server.time_left // 60, server.time_left % 60)
 
+            def make_colored(string: str, color: str | None):
+                if not color:
+                    return string
+                return irccodes.colored(string, color, padding="")
+
             message = "%s on %s (%s): %s %s on %s (%s)" % (
-                ircmessage.style(str(server.players_count), fg="red"),
-                ircmessage.style("%s" % server.description, fg="orange"),
-                ", ".join((ircmessage.style(p, fg=next(colors)) for p in players)),
-                ircmessage.style("-".join(server.mutators), fg="teal"),
-                ircmessage.style(server.game_mode, fg="green"),
-                ircmessage.style(server.map_name, fg="pink"),
+                make_colored(str(server.players_count), "light red"),
+                make_colored(server.description, "orange"),
+                ", ".join((make_colored(p, next(colors)) for p in players)),
+                make_colored("-".join(server.mutators), "light cyan"),
+                make_colored(server.game_mode, "green"),
+                make_colored(server.map_name, "pink"),
                 time_remaining_str,
             )
 
