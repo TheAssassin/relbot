@@ -19,10 +19,12 @@ def managed_proxied_session():
     :return: session with proxies preconfigured
     """
 
+    tor_proxy_host = os.environ.get("TOR_PROXY_HOST", "127.0.0.1")
+
     # local Tor proxy server
     proxies = {
-        "http": "socks5://127.0.0.1:9050",
-        "https": "socks5://127.0.0.1:9050",
+        "http": f"socks5://{tor_proxy_host}:9050",
+        "https": f"socks5://{tor_proxy_host}:9050",
     }
 
     session = requests.session()
