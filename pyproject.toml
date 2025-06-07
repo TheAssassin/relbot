@@ -1,9 +1,13 @@
 [tool.poetry]
 name = "relbot"
+# version needed for installation, it's not really used
 version = "0.0.1"
 description = ""
 authors = ["TheAssassin <theassassin@assassinate-you.net>"]
 license = "MIT"
+packages = [
+    { include = "relbot" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
