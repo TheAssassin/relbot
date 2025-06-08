@@ -96,7 +96,10 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
             continue
 
         tree = html.fromstring(response.content)
-        title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
+        try:
+            title = tree.cssselect("[data-testid=issue-header] bdi")[0].text.strip(" \r\n")
+        except IndexError:
+            title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
 
         url_parts = response.url.split("/")
         if "pull" in url_parts:
