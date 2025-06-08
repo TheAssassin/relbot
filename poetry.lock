@@ -246,18 +246,6 @@ test = ["aiocron", "feedparser", "irc3-plugins-test", "pysocks", "pytest", "pyte
 web = ["aiohttp"]
 
 [[package]]
-name = "irccodes"
-version = "1.2.0"
-description = "Python module for formatting text in IRC"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "irccodes-1.2.0-py3-none-any.whl", hash = "sha256:f0a4862ffd7622fe9f0644c607436a00891ad6c8916f6b85b58118e42a670500"},
-    {file = "irccodes-1.2.0.tar.gz", hash = "sha256:f140b3d1b08eda798060f8156d84b410d75b1d1e538b05baf99f0cc302c93743"},
-]
-
-[[package]]
 name = "lxml"
 version = "5.4.0"
 description = "Powerful and Pythonic XML processing library combining libxml2/libxslt with the ElementTree API."
@@ -584,4 +572,4 @@ testing = ["coverage", "pytest", "pytest-cov"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "f8d8eca2b600741a00b83bbe69475df6427614d77754eb1b6374ad1bfaf075b3"
+content-hash = "9dcac1c06730d1f3ff08cbb87cbab6dafb7b6e98d96799db661e5aa31b354623"

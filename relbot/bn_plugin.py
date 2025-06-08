@@ -2,9 +2,9 @@ import itertools
 import random
 
 import irc3
-import irccodes
 from irc3.plugins.command import command
 
+from relbot.ircformat import Color, format_text
 from relbot.redflare_client import RedflareClient
 from relbot.util import make_logger
 
@@ -45,7 +45,7 @@ class RELBotBNPlugin:
             players = [p.name for p in server.players]
 
             # the colors we use to format player names
-            colors = ["light red", "pink", "green", "light green", "orange", None]
+            colors = [Color.RED, Color.PINK, Color.GREEN, Color.LIGHT_GREEN, Color.ORANGE, None]
             # make things a bit more interesting by randomizing the order
             random.shuffle(colors)
             # however, once the order is defined, just apply those colors in the ever same order to nicks in the list
@@ -63,20 +63,19 @@ class RELBotBNPlugin:
             else:
                 time_remaining_str = "%d:%d left" % (server.time_left // 60, server.time_left % 60)
 
-            def make_colored(string: str, color: str | None):
-                if not color:
-                    return string
-                return irccodes.colored(string, color, padding="")
+            print(server.players_count)
 
             message = "%s on %s (%s): %s %s on %s (%s)" % (
-                make_colored(str(server.players_count), "light red"),
-                make_colored(server.description, "orange"),
-                ", ".join((make_colored(p, next(colors)) for p in players)),
-                make_colored("-".join(server.mutators), "light cyan"),
-                make_colored(server.game_mode, "green"),
-                make_colored(server.map_name, "pink"),
+                format_text(str(server.players_count), Color.RED),
+                format_text(server.description, Color.ORANGE),
+                ", ".join((format_text(p, next(colors)) for p in players)),
+                format_text("-".join(server.mutators), Color.LIGHT_CYAN),
+                format_text(server.game_mode, Color.GREY),
+                format_text(server.map_name, Color.PINK),
                 time_remaining_str,
             )
+
+            print(message)
 
             self.logger.debug(repr(message))
 
