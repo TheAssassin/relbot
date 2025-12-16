@@ -16,7 +16,7 @@ irc3 = "^1.1.8"
 feedparser = "^6.0.12"
 lxml = "^6"
 cssselect = "^1.2.0"
-beautifulsoup4 = "^4.11.1"
+beautifulsoup4 = "^4.14.3"
 aiocron = "^2.1"
 
 [poetry.group.dev.dependencies]
