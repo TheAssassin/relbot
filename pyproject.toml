@@ -15,7 +15,7 @@ requests = {extras = ["socks"], version = "^2.32.5"}
 irc3 = "^1.1.8"
 feedparser = "^6.0.12"
 lxml = "^6"
-cssselect = "^1.2.0"
+cssselect = "^1.4.0"
 beautifulsoup4 = "^4.14.3"
 aiocron = "^2.1"
 
