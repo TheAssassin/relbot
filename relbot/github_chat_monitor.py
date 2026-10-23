@@ -99,7 +99,11 @@ def github_chat_monitor(bot, mask, target, data, **kwargs):
         try:
             title = tree.cssselect("[data-testid=issue-header] bdi")[0].text.strip(" \r\n")
         except IndexError:
-            title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
+            try:
+                title = tree.cssselect(".gh-header-title .js-issue-title")[0].text.strip(" \r\n")
+            except IndexError:
+                # GitHub changed the layout for PRs recently it seems
+                title = tree.cssselect("[data-component=TitleArea] [data-component=Text]")[0].text.strip(" \r\n")
 
         url_parts = response.url.split("/")
         if "pull" in url_parts:
